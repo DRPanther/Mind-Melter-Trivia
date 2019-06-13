@@ -1,0 +1,47 @@
+from mystic_bbs import *
+import os
+
+if "Windows" in mci2str("OS"):
+  newline="\n\r"
+else:
+  newline="\n"
+
+base_id="16"
+email_subject="80s_Music_Trivia"
+email_from="TriviaMaster"
+email_to="All"
+file_prefix="trv"
+file_postfix=".trv"
+outdir="/home/dan/mystic/scripts/rcs/trivdoor"
+
+progpath=param_str(0)
+justpath=os.path.dirname(progpath)
+
+mbase = getmbaseid(int(base_id))
+
+if mbase is None:
+  writeln ("|CRYou have not selected a message base yet!|CR|CR|PA")
+  quit()
+
+msg = msg_open(mbase["path"] + mbase["filename"]);
+
+if msg is None:
+  quit()
+
+count=99999
+msg_seek(msg, 0)
+while msg_found(msg) and not shutdown():
+  msghdr  = msg_gethdr(msg)
+  if msghdr["from"] == email_from and msghdr["to"] == email_to and msghdr["subj"] != mci2str("BN"):
+    count-=1
+    this_msg_file=os.path.join(outdir,file_prefix+str(count)+file_postfix)
+    f=open(this_msg_file,"w")
+
+    msgtext = msg_gettxt(msg)
+    for line in msgtext:
+      f.write(line+newline)
+    f.close()
+    msg_delete(msg)
+  msg_next(msg)
+
+msg_close(msg)

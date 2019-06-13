@@ -1,0 +1,59 @@
+Release name: Mind Melter Trivia
+
+Intallation Guide :
+
+Prerequisites:
+  Must be running Mystic, which make sense, as the program is an MPL. :)
+
+
+Installation:
+  Create the directory 'rcs' in your Mystic Sciripts directory (/mystic/scripts/rcs)
+  Then create a sub-directory within that directory called 'trivdoor' (/mystic/scripts/rcs/trivdoor)
+
+    This directory will contain all the data, ansi, etc, files.
+
+  Copy all files except rcs_triv.mps and rcs-triv_get.mpy into this directory
+
+  *** VERY IMPORTANT STEP - DO NOT SKIP THIS STEP ***
+
+  Open rcs_triv.mps in a text editor and change lines 5 - 7
+  Line 5: bbs = 'Castle Rock BBS'  <=- This should be your BBS name
+  Line 6: MBaseID = '16'  <=- This needs to be the message base to use for InterBBS Data
+  Line 7: rcspath = '/path/to/your/mystic/scripts/rcs/trivdoor/'
+
+  Then, save the file.
+
+  Open rcs-triv_get.mpy file in your text editor and change line 9 and 15
+  Line 9: base_id="16"  <=- This should be the same as line 6 in rcs_triv.mps
+  Line 15: outdir="/path/to/your/mystic/scripts/rcs/trivdoor/"
+
+  Then you can save this file
+
+  Copy the rcs_triv.mps and rcs-triv_get.mpy file into your Scripts directory
+
+  Compile the MPS file:
+
+    Windows:
+      cd \mystic\scripts\
+      mplc rcs_triv
+
+    Linux:
+      cd /mystic/scripts/
+      ./mplc rcs_triv
+
+  Create a menu option on the menu of your choice:
+
+  Display Text  (E) Mind Melter Trivia
+  LightBar Low  (E) Mind Melter Trivia
+  LightBar High (E) Mind Melter Trivia
+  Hit Key       E
+  Access
+  Display Type  Access
+  X Y           0  0
+  Timer         0
+  Timer Type    Interval       Redraw  Yes
+  Command---------------------Access---------Data----------------------------------
+  (NA) Set node action                       Playing Mind Melter Trivia
+  (GY) Execute Python Module                 rcs-triv_get
+  (GX) Execute MPL program                   rcs_triv
+
