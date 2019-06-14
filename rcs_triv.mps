@@ -4,7 +4,7 @@ Uses User;
 Const
   bbs  = 'Castle Rock BBS'            //BBS Name :)
   MBaseID = '16'                      //Message base ID to post message
-  rcspath = '/home/dan/mystic/scripts/rcs/trivdoor1/' //Path to all data files
+  rcspath = '/home/dan/mystic/scripts/rcs/trivdoor/' //Path to all data files
   prog = 'RCS 80s Music Trivia'
   ver  = 'v0.01'
 
@@ -43,6 +43,7 @@ Var
   TrivSkor  : String
   ts        : file
   temp      : scores
+  plyrwon   : Boolean=false
 
 procedure proginit
 Begin
@@ -315,12 +316,6 @@ Begin
       Until l='>>>FINISH'
     End
   End;
-  //WriteLn(temp.name)
-  //WriteLn(temp.alias)
-  //WriteLn(temp.bbses)
-  //WriteLn(Int2Str(temp.score))
-  //WriteLn(Int2Str(temp.lastplay))
-  //pause
   SaveIbbs(FindIBBS(temp.name,temp.bbses))
   U.QA:=WordGet(2,U.QAns[1],' ')
   fClose(fp);
@@ -464,7 +459,6 @@ End
 procedure progend
 Begin
   SavePlyr(score.index)
-  //fWriteLn(ts,Int2Str(score.index))
   fAssign(ts,trivskor,66)
   fReWrite(ts)
   fWriteLn(ts,'>>>START')
@@ -475,7 +469,7 @@ Begin
   fWriteLn(ts,Rot47(Int2Str(score.lastplay)))
   fWriteLn(ts,'>>>FINISH')
   fClose(ts)
-  If FileExist(AppDir+'trivscor.txt') then
+  If (FileExist(AppDir+'trivscor.txt'))and(plyrwon) then
   Begin
     MenuCmd('MX',AppDir+'trivscor.txt'+';'+MBaseID+';TriviaMaster;All;80s_Music_Trivia');
     //FileErase(AppDir+'trivscor.txt');
