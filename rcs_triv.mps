@@ -315,12 +315,12 @@ Begin
       Until l='>>>FINISH'
     End
   End;
-  WriteLn(temp.name)
-  WriteLn(temp.alias)
-  WriteLn(temp.bbses)
-  WriteLn(Int2Str(temp.score))
-  WriteLn(Int2Str(temp.lastplay))
-  pause
+  //WriteLn(temp.name)
+  //WriteLn(temp.alias)
+  //WriteLn(temp.bbses)
+  //WriteLn(Int2Str(temp.score))
+  //WriteLn(Int2Str(temp.lastplay))
+  //pause
   SaveIbbs(FindIBBS(temp.name,temp.bbses))
   U.QA:=WordGet(2,U.QAns[1],' ')
   fClose(fp);
