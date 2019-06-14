@@ -3,8 +3,8 @@ Uses User;
 
 Const
   bbs  = 'Castle Rock BBS'            //BBS Name :)
-  MBaseID = '1010'                      //Message base ID to post message
-  rcspath = '/home/dan/mystic/scripts/rcs/trivdoor/' //Path to all data files
+  MBaseID = '16'                      //Message base ID to post message
+  rcspath = '/home/dan/mystic/scripts/rcs/trivdoor1/' //Path to all data files
   prog = 'RCS 80s Music Trivia'
   ver  = 'v0.01'
 
@@ -42,6 +42,7 @@ Var
   skoribbs  : String
   TrivSkor  : String
   ts        : file
+  temp      : scores
 
 procedure proginit
 Begin
@@ -94,12 +95,12 @@ Begin
   fAssign(Fptr,skoribbs,66)
   fReset(Fptr)
   If IOResult = 0 Then
-    fSeek(Fptr,(I-1)*SizeOf(ibbsscore))
+    fSeek(Fptr,(I-1)*SizeOf(temp))
   Else Begin
     ibbsscore.Index:=1
     fRewrite(Fptr)
   End
-  fWriteRec(Fptr,ibbsscore)
+  fWriteRec(Fptr,temp)
   fClose(Fptr)
 End
 
@@ -150,7 +151,7 @@ Procedure listlocalscores
 Var
   x         : byte=1
   y         : byte=1
-  temp      : byte
+  tempbyte  : byte
   lastrecord:byte=1
 Begin
   While ReadPlyr(x) Do
@@ -164,16 +165,16 @@ Begin
     x:=x+1
     lastrecord:=lastrecord+1
   End
-  temp:=lastrecord+1
+  tempbyte:=lastrecord+1
   For x:=1 to lastrecord do
   Begin
     For y:=1 to lastrecord do
     Begin
       if skor[x].score > skor[y].score then
       Begin
-        skor[temp]:=skor[x]
+        skor[tempbyte]:=skor[x]
         skor[x]:=skor[y]
-        skor[y]:=skor[temp]
+        skor[y]:=skor[tempbyte]
       End
     End
   End
@@ -197,7 +198,7 @@ procedure listibbsscores
 Var
   x         : byte=1
   y         : byte=1
-  temp      : byte
+  tempbyte  : byte
   lastrecord:byte=1
 Begin
   While ReadIBBS(x) Do
@@ -211,16 +212,16 @@ Begin
     x:=x+1
     lastrecord:=lastrecord+1
   End
-  temp:=lastrecord+1
+  tempbyte:=lastrecord+1
   For x:=1 to lastrecord do
   Begin
     For y:=1 to lastrecord do
     Begin
       if ibbsskor[x].score > ibbsskor[y].score then
       Begin
-        ibbsskor[temp]:=ibbsskor[x]
+        ibbsskor[tempbyte]:=ibbsskor[x]
         ibbsskor[x]:=ibbsskor[y]
-        ibbsskor[y]:=ibbsskor[temp]
+        ibbsskor[y]:=ibbsskor[tempbyte]
       End
     End
   End
@@ -265,7 +266,7 @@ Var
   R  : Rec;
   x  : Integer;
   y  : Byte=1
-  temp: scores
+
 Begin
   x:=1;
   If Not FileExist(S) Then Exit;
@@ -314,6 +315,12 @@ Begin
       Until l='>>>FINISH'
     End
   End;
+  WriteLn(temp.name)
+  WriteLn(temp.alias)
+  WriteLn(temp.bbses)
+  WriteLn(Int2Str(temp.score))
+  WriteLn(Int2Str(temp.lastplay))
+  pause
   SaveIbbs(FindIBBS(temp.name,temp.bbses))
   U.QA:=WordGet(2,U.QAns[1],' ')
   fClose(fp);
