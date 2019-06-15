@@ -6,7 +6,7 @@ Const
   MBaseID = '16'                      //Message base ID to post message
   rcspath = '/home/dan/mystic/scripts/rcs/trivdoor/' //Path to all data files
   prog = 'RCS 80s Music Trivia'
-  ver  = 'v0.01'
+  ver  = 'v0.02'
 
 Type
   Rec = Record
@@ -34,7 +34,7 @@ Var
   ibbsplyr  : Integer=0
   bool      : Boolean;
   ch        : Char
-  score     : scores
+  Plyrscore : scores
   ibbsscore : scores
   skor      : Array[1..50] of scores
   ibbsskor  : Array[1..75] of scores
@@ -45,6 +45,43 @@ Var
   temp      : scores
   plyrwon   : Boolean=false
 
+Function ReadPlyr(I:Integer):Boolean                //read player info
+Var Ret   : Boolean = False
+Var Fptr  : File
+Begin
+  //WriteLn('Read Player: '+Int2Str(I))
+  fAssign(Fptr,skorfile,66)
+  fReset(Fptr)
+  If IOResult = 0 Then Begin
+    fSeek(Fptr,(I-1)*SizeOf(Plyrscore))
+    If Not fEof(Fptr) Then Begin
+      fReadRec(Fptr,Plyrscore)
+      Ret:=True
+    End
+    fClose(Fptr)
+  End
+  //if Ret=true then WriteLn('Read Player: True')
+  //pause
+  ReadPlyr:=Ret
+End
+
+Function ReadIBBS(I:Integer):Boolean                //read player info
+Var Ret   : Boolean = False
+Var Fptr1  : File
+Begin
+  fAssign(Fptr1,skoribbs,66)
+  fReset(Fptr1)
+  If IOResult = 0 Then Begin
+    fSeek(Fptr1,(I-1)*SizeOf(ibbsscore))
+    If Not fEof(Fptr1) Then Begin
+      fReadRec(Fptr1,ibbsscore)
+      Ret:=True
+    End
+    fClose(Fptr1)
+  End
+  Readibbs:=Ret
+End
+
 procedure proginit
 Begin
   GetThisUser;
@@ -53,71 +90,47 @@ Begin
   SkorFile:= AddSlash(AppDir)+'trivskor.dat';
   Skoribbs:= AddSlash(AppDir)+'trivibbs.dat';
   TrivSkor:= AddSlash(AppDir)+'trivscor.txt';
-End
-
-Function ReadPlyr(I:Integer):Boolean                //read player info
-Var Ret   : Boolean = False
-Var Fptr  : File
-Begin
-  fAssign(Fptr,skorfile,66)
-  fReset(Fptr)
-  If IOResult = 0 Then Begin
-    fSeek(Fptr,(I-1)*SizeOf(score))
-    If Not fEof(Fptr) Then Begin
-      fReadRec(Fptr,score)
-      Ret:=True
-    End
-    fClose(Fptr)
-  End
-  ReadPlyr:=Ret
-End
-
-Function ReadIBBS(I:Integer):Boolean                //read player info
-Var Ret   : Boolean = False
-Var Fptr  : File
-Begin
-  fAssign(Fptr,skoribbs,66)
-  fReset(Fptr)
-  If IOResult = 0 Then Begin
-    fSeek(Fptr,(I-1)*SizeOf(ibbsscore))
-    If Not fEof(Fptr) Then Begin
-      fReadRec(Fptr,ibbsscore)
-      Ret:=True
-    End
-    fClose(Fptr)
-  End
-  Readibbs:=Ret
+  While ReadIBBS(ibbsplyr+1) Do
+    ibbsplyr:=ibbsplyr+1
+  While ReadPlyr(PlyrCount+1) Do
+    PlyrCount:=PlyrCount+1
 End
 
 Procedure SaveIbbs(I:Integer)                  //save player's record
 Var Ret  : Boolean = False
-Var Fptr  : File
+Var Fptr1  : File
 Begin
-  fAssign(Fptr,skoribbs,66)
-  fReset(Fptr)
+  fAssign(Fptr1,skoribbs,66)
+  fReset(Fptr1)
   If IOResult = 0 Then
-    fSeek(Fptr,(I-1)*SizeOf(temp))
+    fSeek(Fptr1,(I-1)*SizeOf(temp))
   Else Begin
-    ibbsscore.Index:=1
-    fRewrite(Fptr)
+    temp.Index:=1
+    fRewrite(Fptr1)
   End
-  fWriteRec(Fptr,temp)
-  fClose(Fptr)
+  fWriteRec(Fptr1,temp)
+  fClose(Fptr1)
 End
 
 Procedure SavePlyr(I:Integer)                  //save player's record
 Var Ret  : Boolean = False
 Var Fptr  : File
 Begin
+  //WriteLn('Save Player: '+Int2Str(I))
+  //pause
   fAssign(Fptr,skorfile,66)
   fReset(Fptr)
   If IOResult = 0 Then
-    fSeek(Fptr,(I-1)*SizeOf(score))
+  Begin
+    fSeek(Fptr,(I-1)*SizeOf(Plyrscore))
+    //WriteLn('IOResult=0')
+    //pause
+  End
   Else Begin
-    score.Index:=1
+    Plyrscore.Index:=1
     fRewrite(Fptr)
   End
-  fWriteRec(Fptr,score)
+  fWriteRec(Fptr,Plyrscore)
   fClose(Fptr)
 End
 
@@ -125,10 +138,10 @@ Function FindIBBS(RN,IBBS:String):Integer          //find player in .dat file
 Var Ret  : Integer = 0
 Var I    : Integer = 1
 Begin
-  RN:=Upper(RN)
-  IBBS:=Upper(IBBS)
+  //RN:=Upper(RN)
+  //IBBS:=Upper(IBBS)
   While ReadIBBS(I) And Ret = 0 Do Begin
-    If (Upper(ibbsscore.Name)=RN)and(Upper(ibbsscore.bbses)=IBBS) Then
+    If (Upper(ibbsscore.Name)=Upper(RN))and(Upper(ibbsscore.bbses)=Upper(IBBS)) Then
       Ret:=ibbsscore.Index
     I:=I+1
   End
@@ -139,12 +152,16 @@ Function FindPlyr(RN:String):Integer          //find player in .dat file
 Var Ret  : Integer = 0
 Var I    : Integer = 1
 Begin
-  RN:=Upper(RN)
+  //RN:=Upper(RN)
+  //WriteLn('Find Player: '+RN)
+  //pause
   While ReadPlyr(I) And Ret = 0 Do Begin
-    If Upper(score.Name)=RN Then
-      Ret:=score.Index
+    If Upper(Plyrscore.Name)=Upper(RN) Then
+      Ret:=Plyrscore.Index
     I:=I+1
   End
+  //WriteLn('Find Player: '+Int2Str(Ret))
+  //pause
   FindPlyr:=Ret
 End
 
@@ -157,12 +174,12 @@ Var
 Begin
   While ReadPlyr(x) Do
   Begin
-    skor[x].index:=score.index
-    skor[x].alias:=score.alias
-    skor[x].name:=score.name
-    skor[x].bbses:=score.bbses
-    skor[x].score:=score.score
-    skor[x].lastplay:=score.lastplay
+    skor[x].index:=Plyrscore.index
+    skor[x].alias:=Plyrscore.alias
+    skor[x].name:=Plyrscore.name
+    skor[x].bbses:=Plyrscore.bbses
+    skor[x].score:=Plyrscore.score
+    skor[x].lastplay:=Plyrscore.lastplay
     x:=x+1
     lastrecord:=lastrecord+1
   End
@@ -192,7 +209,7 @@ Begin
       WriteLn(skor[x].alias+'          '+Int2Str(skor[x].score))
     End
   End
-  pause
+  ReadKey
 End
 
 procedure listibbsscores
@@ -239,7 +256,7 @@ Begin
       WriteLn(ibbsskor[x].alias+'         '+ibbsskor[x].bbses+'         '+Int2Str(ibbsskor[x].score))
     End
   End
-  pause
+  ReadKey
 End
 
 function Rot47(s: string): string;
@@ -267,6 +284,7 @@ Var
   R  : Rec;
   x  : Integer;
   y  : Byte=1
+  z  : Byte=0
 
 Begin
   x:=1;
@@ -316,7 +334,10 @@ Begin
       Until l='>>>FINISH'
     End
   End;
-  SaveIbbs(FindIBBS(temp.name,temp.bbses))
+  z:=FindIBBS(temp.name,temp.bbses)
+  if z=0 then z:=ibbsplyr+1
+  temp.index:=z
+  SaveIbbs(temp.index)
   U.QA:=WordGet(2,U.QAns[1],' ')
   fClose(fp);
   FileErase(S);
@@ -355,8 +376,8 @@ Var
   U   : Rec;
   i   : integer=1;
 Begin
-  score.bbses:=bbs
-  SavePlyr(score.index)
+  Plyrscore.bbses:=bbs
+  SavePlyr(Plyrscore.index)
   If Not FileExist(DatFile) Then Begin
     ClrScr;
     WriteLn('No Data to display... Exiting.');
@@ -381,7 +402,7 @@ Begin
     WriteXY(3,17+i,15,U.QOpt[i])
   End
   fClose(fp);
-  WriteXY(3,23,15,'Enter your choice '+score.alias+' (Q-Quit) : ')
+  WriteXY(3,23,15,'Enter your choice '+Plyrscore.alias+' (Q-Quit) : ')
   ch:=Upper(OneKey('ABCDQ',True))
   if ch='Q' then break
   if not Checkans(ch,U.QA) then
@@ -391,9 +412,10 @@ Begin
   End
   Else
   Begin
-    score.score:=score.score+1
-    score.lastplay:=DateTime
-    SavePlyr(score.index)
+    Plyrwon:=true
+    Plyrscore.score:=Plyrscore.score+1
+    Plyrscore.lastplay:=DateTime
+    SavePlyr(Plyrscore.index)
     DispFile(AppDir+'trivcorr.ans')
     ReadKey
   End
@@ -447,33 +469,33 @@ End
 procedure NewPlyr
 Begin
   PlyrCount:=PlyrCount+1
-  score.index:=PlyrCount
-  score.name:=UserName
-  score.Alias:=UserAlias
-  score.bbses:=bbs
-  score.score:=0
-  score.lastplay:=DateTime
-  SavePlyr(score.index)
+  Plyrscore.index:=PlyrCount
+  Plyrscore.name:=UserName
+  Plyrscore.Alias:=UserAlias
+  Plyrscore.bbses:=bbs
+  Plyrscore.score:=0
+  Plyrscore.lastplay:=DateTime
+  SavePlyr(Plyrscore.index)
 End
 
 procedure progend
 Begin
-  SavePlyr(score.index)
+  SavePlyr(Plyrscore.index)
   fAssign(ts,trivskor,66)
   fReWrite(ts)
   fWriteLn(ts,'>>>START')
-  fWriteLn(ts,Rot47(score.name))
-  fWriteLn(ts,Rot47(score.alias))
-  fWriteLn(ts,Rot47(score.bbses))
-  fWriteLn(ts,Rot47(Int2Str(score.score)))
-  fWriteLn(ts,Rot47(Int2Str(score.lastplay)))
+  fWriteLn(ts,Rot47(Plyrscore.name))
+  fWriteLn(ts,Rot47(Plyrscore.alias))
+  fWriteLn(ts,Rot47(Plyrscore.bbses))
+  fWriteLn(ts,Rot47(Int2Str(Plyrscore.score)))
+  fWriteLn(ts,Rot47(Int2Str(Plyrscore.lastplay)))
   fWriteLn(ts,'>>>FINISH')
   fClose(ts)
   If (FileExist(AppDir+'trivscor.txt'))and(plyrwon) then
   Begin
     MenuCmd('MX',AppDir+'trivscor.txt'+';'+MBaseID+';TriviaMaster;All;80s_Music_Trivia');
-    //FileErase(AppDir+'trivscor.txt');
   End
+  FileErase(AppDir+'trivscor.txt');
   GotoXY(1,22)
 End
 
@@ -499,10 +521,8 @@ Begin
              y:=FindPlyr(UserName)
              if y > 0 Then
              Begin
-               if datecheck(DateTime,score.lastplay) then
+               if datecheck(DateTime,Plyrscore.lastplay) then
                Begin
-                 ReadPlyr(y)
-                 readfiles
                  ShowData
                End
                Else
@@ -514,7 +534,7 @@ Begin
              Else
              Begin
                NewPlyr
-               readfiles
+               //readfiles
                ShowData
              End
            End
